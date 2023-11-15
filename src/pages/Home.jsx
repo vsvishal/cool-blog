@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Container, PostCard } from "../components";
 import appwriteServie from "../appwrite/config";
+import useGetPosts from "../utility/hooks/useGetPosts";
 
 function Home() {
-  const [posts, setPosts] = useState([]);
+  // const [posts, setPosts] = useState([]);
+  const posts = useGetPosts();
 
-  useEffect(() => {
-    appwriteServie.getPosts().then((posts) => {
-      if (posts) {
-        setPosts(posts.documents);
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   appwriteServie.getPosts().then((posts) => {
+  //     if (posts) {
+  //       setPosts(posts.documents);
+  //     }
+  //   });
+  // }, []);
 
   if (posts.length === 0) {
     return (

@@ -21,7 +21,6 @@ function Login() {
         if (userData) {
           dispatch(authLogin(userData));
         }
-        console.log("userData inside Login: ", userData);
         navigate("/");
       }
     } catch (error) {

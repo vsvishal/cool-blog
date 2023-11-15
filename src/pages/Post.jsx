@@ -19,7 +19,6 @@ export default function Post() {
       appwriteService.getPost(slug).then((post) => {
         if (post) {
           setPost(post);
-          console.log("post inside Post: ", post);
         } else navigate("/");
       });
     } else navigate("/");
