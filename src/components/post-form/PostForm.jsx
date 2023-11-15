@@ -1,41 +1,45 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { Button, Input, Select, RTE } from "../index";
+import { Button, Input, RTE, Select } from "..";
 import appwriteService from "../../appwrite/config";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-function PostForm({ post }) {
-  const navigate = useNavigate();
-  const userData = useSelector((store) => store.auth.userData);
-  const { register, handleSubmit, watch, setValue, getValues, control } =
+export default function PostForm({ post }) {
+  const { register, handleSubmit, watch, setValue, control, getValues } =
     useForm({
       defaultValues: {
         title: post?.title || "",
-        slug: post?.slug || "",
+        slug: post?.$id || "",
         content: post?.content || "",
-        status: post?.status || "",
+        status: post?.status || "active",
       },
     });
+
+  const navigate = useNavigate();
+  const userData = useSelector((state) => state.auth.userData);
 
   const submit = async (data) => {
     if (post) {
       const file = data.image[0]
-        ? appwriteService.fileUpload(data.image[0])
+        ? await appwriteService.uploadFile(data.image[0])
         : null;
+
       if (file) {
         appwriteService.deleteFile(post.featuredImage);
       }
+
       const dbPost = await appwriteService.updatePost(post.$id, {
         ...data,
         featuredImage: file ? file.$id : undefined,
       });
+
       if (dbPost) {
         navigate(`/post/${dbPost.$id}`);
       }
     } else {
-      // improvement add functionality to check if file present than only upload
-      const file = await appwriteService.fileUpload(data.image[0]);
+      const file = await appwriteService.uploadFile(data.image[0]);
+
       if (file) {
         const fileId = file.$id;
         data.featuredImage = fileId;
@@ -43,6 +47,7 @@ function PostForm({ post }) {
           ...data,
           userId: userData.$id,
         });
+
         if (dbPost) {
           navigate(`/post/${dbPost.$id}`);
         }
@@ -51,26 +56,24 @@ function PostForm({ post }) {
   };
 
   const slugTransform = useCallback((value) => {
-    if (value && typeof value === "string") {
+    if (value && typeof value === "string")
       return value
         .trim()
         .toLowerCase()
-        .replace(/^[a-zA-Z\d\s]+/g, "-")
+        .replace(/[^a-zA-Z\d\s]+/g, "-")
         .replace(/\s/g, "-");
-    }
+
     return "";
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const subscription = watch((value, { name }) => {
       if (name === "title") {
-        setValue("slug", slugTransform(value.title, { shouldValidate: true }));
+        setValue("slug", slugTransform(value.title), { shouldValidate: true });
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [watch, slugTransform, setValue]);
 
   return (
@@ -134,5 +137,3 @@ function PostForm({ post }) {
     </form>
   );
 }
-
-export default PostForm;
